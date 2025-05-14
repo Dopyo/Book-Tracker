@@ -1,0 +1,91 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject BookApiService BookService
+@inject NavigationManager NavigationManager
+@using LibraryManager.Services
+
+<h3>Books List</h3>
+
+@if (books == null && isLoading)
+{
+    <p><em>Loading books...</em></p>
+}
+else if (books == null || !books.Any())
+{
+    <p>No books found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Authors</th>
+                <th>Available Copies</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@(string.Join(", ", book.Authors))</td>
+                    <td>@book.AvailableCopies</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" @onclick="() => ViewBook(book.BookID)">View</button>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<BookSummaryDto>? books;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        books = await BookService.GetBooksAsync();
+        isLoading = false;
+    }
+
+    private async Task ViewBook(int bookId)
+    {
+
+        var bookDetail = await BookService.GetBookByIdAsync(bookId);
+        if (bookDetail != null)
+        {
+            NavigationManager.NavigateTo("book/" + bookId);
+        }
+    }
+
+    // Example for adding a new book (not used in the UI)
+    private async Task AddNewBook()
+    {
+        var newBookDto = new CreateBookDto(
+        "978-3-16-148410-0", // ISBN
+        "My New Blazor Book",
+        null, // GenreId
+        new List<int>(), // AuthorIds
+        DateTime.Now.Year,
+        "Blazor Publishing",
+        200,
+        1
+        );
+        var createdBook = await BookService.CreateBookAsync(newBookDto);
+        if (createdBook != null)
+        {
+            Console.WriteLine($"Created: {createdBook.Title}");
+
+            await OnInitializedAsync();
+        }
+        else
+        {
+            Console.WriteLine("Failed to create book.");
+        }
+    }
+}

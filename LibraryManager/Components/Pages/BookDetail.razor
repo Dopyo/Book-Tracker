@@ -1,0 +1,129 @@
+@page "/book/{BookId:int}"
+@rendermode InteractiveServer
+@inject BookApiService BookService
+@inject NavigationManager NavigationManager
+@using LibraryManager.Services
+
+<PageTitle>Book Detail: @(book?.Title ?? "Loading...")</PageTitle>
+
+<h3>Book Detail</h3>
+
+@if (isLoading)
+{
+    <p><em>Loading book details...</em></p>
+}
+else if (book != null)
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>@book.Title</h4>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ISBN:</dt>
+                <dd class="col-sm-9">@book.ISBN</dd>
+
+                <dt class="col-sm-3">Authors:</dt>
+                <dd class="col-sm-9">@(string.Join(", ", book.Authors))</dd>
+
+                <dt class="col-sm-3">Genre:</dt>
+                <dd class="col-sm-9">@(book.GenreName ?? "N/A")</dd>
+
+                <dt class="col-sm-3">Publication Year:</dt>
+                <dd class="col-sm-9">@(book.PublicationYear?.ToString() ?? "N/A")</dd>
+
+                <dt class="col-sm-3">Publisher:</dt>
+                <dd class="col-sm-9">@(book.Publisher ?? "N/A")</dd>
+
+                <dt class="col-sm-3">Pages:</dt>
+                <dd class="col-sm-9">@(book.NumberOfPages?.ToString() ?? "N/A")</dd>
+
+                <dt class="col-sm-3">Edition:</dt>
+                <dd class="col-sm-9">@(book.Edition ?? "N/A")</dd>
+
+                <dt class="col-sm-3">Total Copies:</dt>
+                <dd class="col-sm-9">@book.TotalCopies</dd>
+
+                <dt class="col-sm-3">Available Copies:</dt>
+                <dd class="col-sm-9">@book.AvailableCopies</dd>
+
+                <dt class="col-sm-3">Date Added:</dt>
+                <dd class="col-sm-9">@book.DateAdded.ToShortDateString()</dd>
+
+                @if (!string.IsNullOrWhiteSpace(book.CoverImageURL))
+                {
+                    <dt class="col-sm-3">Cover:</dt>
+                    <dd class="col-sm-9"><img src="@book.CoverImageURL" alt="Cover image for @book.Title"
+                            style="max-width: 200px; max-height: 300px;" /></dd>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(book.Description))
+                {
+                    <dt class="col-sm-3">Description:</dt>
+                    <dd class="col-sm-9">@((MarkupString)book.Description.Replace("\n", "<br />"))</dd>
+                }
+            </dl>
+        </div>
+        <div class="card-footer">
+            <button class="btn btn-secondary" @onclick="GoBack">Back to List</button>
+
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning" role="alert">
+        Book not found or there was an error loading the details.
+    </div>
+    <button class="btn btn-secondary" @onclick="GoBack">Back to List</button>
+}
+
+@code {
+    [Parameter]
+    public int BookId { get; set; }
+
+    private BookDetailDto? book;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadBookDetails();
+    }
+
+    private async Task LoadBookDetails()
+    {
+        isLoading = true;
+        errorMessage = null;
+        book = null; // Reset book data
+
+        if (BookId > 0 && BookService != null)
+        {
+            try
+            {
+                book = await BookService.GetBookByIdAsync(BookId);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error loading book details for ID {BookId}: {ex.Message}");
+                errorMessage = "An error occurred while fetching book details.";
+            }
+        }
+        else if (BookService == null)
+        {
+            errorMessage = "Book service is not available.";
+            Console.WriteLine("BookService is null in BookDetail.razor!");
+        }
+        else
+        {
+            errorMessage = "Invalid Book ID.";
+        }
+        isLoading = false;
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

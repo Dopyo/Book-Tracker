@@ -1,0 +1,33 @@
+GET http://localhost:5086/
+
+###
+POST http://localhost:5086/books
+content-type: application/json
+
+{
+  "isbn": "9780062073488",
+  "title": "And Then There Were None",
+  "genreId": 3,
+  "authorIds": [3],
+  "publicationYear": 1939,
+  "publisher": "Collins Crime Club",
+  "numberOfPages": 272,
+  "totalCopies": 3,
+  "edition": "Paperback",
+  "coverImageURL": "",
+  "description": "Ten strangers are lured to an isolated island mansion off the Devon coast by a mysterious U. N. Owen. The guests have one thing in common: a wicked past they're unwilling to reveal and a secret that will seal their fate. For each has been marked for murder."
+}
+
+###
+GET http://localhost:5086/books
+
+###
+GET http://localhost:5086/books/1
+###
+GET http://localhost:5086/books/13
+###
+
+DELETE http://localhost:5086/books/13
+###
+
+GET http://localhost:5086/tasks/2
